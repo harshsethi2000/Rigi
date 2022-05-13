@@ -14,12 +14,10 @@ app.set('views','./views')
 
 const reader =require('xlsx');
 
-// const fileName="Input report-2021-07-21.xlsx";
-// const file = reader.readFile('./Input report-2021-07-21.xlsx')
-
 
 // const fileName="Input report-2022-05-12.xlsx";
 // const file = reader.readFile('./Input report-2022-05-12.xlsx')
+
 const fileName="Input report-2021-07-21.xlsx";
 const file = reader.readFile('./Input report-2021-07-21.xlsx')
 
@@ -212,90 +210,3 @@ app.listen(PORT,()=>console.log(`Server running on Port: http://localhost:${PORT
 // app.listen(PORT,()=>console.log(`Server running on Port: http://localhost:${PORT}`));
 
 
-
-
-// // const fileName="Input report-2021-07-21.xlsx";
-// // var date="";
-// // for(var i=13;i<23;i++)
-// // {
-// // date=date+fileName[i];
-// // }
-
-// // const file = reader.readFile('./Input report-2021-07-21.xlsx')
-  
-// // let data = []
-// // let data2=[];
-  
-// // const sheets = file.SheetNames
-  
-
-// // //    const temp = reader.utils.sheet_to_json(
-// // //         file.Sheets[file.SheetNames[1]])
-// // //    temp.forEach((res) => {
-// // //       data.push(res)
-// // //    })
-
-// // //      const tempTwo = reader.utils.sheet_to_json(
-// // //         file.Sheets[file.SheetNames[2]])
-// // //    tempTwo.forEach((res) => {
-// // //       data2.push(res)
-// // //    })
-
-// // for(let i = 0; i < sheets.length; i++)
-// // {
-// //    const temp = reader.utils.sheet_to_json(
-// //         file.Sheets[file.SheetNames[i]])
-// //    temp.forEach((res) => {
-// //        if(i==1)data.push(res);
-// //        else data2.push(res);
-// //    })
-// // }
-
-
-
-
-
-// // //merge two array based on id
-
-// // const mergeArrays = (arr1 = [], arr2 = []) => {
-// //     let res = [];
-// //     res = arr1.map(obj => {
-// //        const index = arr2.findIndex(el => el["id"] == obj["id"]);
-// //        const {amount} = index !== -1 ? arr2[index] : {};
-// //        return {
-// //           ...obj,
-// //           amount
-// //        };
-// //     });
-// //     return res;
-// //  };
-
-// // var finalArray=mergeArrays(data,data2);
-
-// // //add date field to an array
-// // finalArray.forEach((elem)=>{
-// //     elem["date"]=date;
-// //     });
-
-// //     var tmpJson={
-// //         "id": '',
-// //         user_name: '',
-// //         amount: '',
-// //         date: '',
-// //     }
-// // finalArray[finalArray.length]=tmpJson;
-
-// // const ws = reader.utils.json_to_sheet(finalArray)
-  
-// // reader.utils.book_append_sheet(file,ws,"Sheet3")
-  
-// // // Writing to our file
-// // reader.writeFile(file,'./testThree.xlsx')
-
-// // // fs.appendFileSync('./testThree.xlsx', finalData);
-  
-// // // Printing data
-// // console.log(data)
-// // console.log(data2)
-// // console.log(finalArray);
-// // console.log(date);
