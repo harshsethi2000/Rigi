@@ -29,7 +29,7 @@ const base64 = require('base64-stream')
 
 var imap = new Imap({
   user: "harhsethi2000@gmail.com",
-  password: "farmfrenzy",
+  password: "*****",
   host: "imap.gmail.com",
   port: 993,
   tls: true,
