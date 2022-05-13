@@ -1,4 +1,3 @@
-//include all the necessary package
 const express = require("express");
 const req = require("express/lib/request");
 //googleapis
@@ -10,10 +9,150 @@ const PORT=3000;
 //set app view engine
 app.set('view engine','ejs')
 app.set('views','./views')
-
-
 const reader =require('xlsx');
 
+//function to download the excel file send on email by the user and to download that file in our working folder
+downloadAndUpdate();
+//function to read from sheet and transform two tabs to one array based on id
+var finalArray=readAndTransform();
+//function to authenticate then update the google sheet
+authenticateAndUpdateSheet(finalArray);
+
+
+
+function downloadAndUpdate(){
+
+var fs = require("fs");
+var buffer = require("buffer");
+var Imap = require("imap");
+const base64 = require('base64-stream')
+
+var imap = new Imap({
+  user: "harhsethi2000@gmail.com",
+  password: "farmfrenzy",
+  host: "imap.gmail.com",
+  port: 993,
+  tls: true,
+  tlsOptions: { rejectUnauthorized: false }
+
+ 
+});
+
+function toUpper(thing) {
+  return thing && thing.toUpperCase ? thing.toUpperCase() : thing;
+}
+
+function findAttachmentParts(struct, attachments) {
+  attachments = attachments || [];
+  for (var i = 0, len = struct.length, r; i < len; ++i) {
+    if (Array.isArray(struct[i])) {
+      findAttachmentParts(struct[i], attachments);
+    } else {
+      if (
+        struct[i].disposition &&
+        ["INLINE", "ATTACHMENT"].indexOf(toUpper(struct[i].disposition.type)) >
+          -1
+      ) {
+        attachments.push(struct[i]);
+      }
+    }
+  }
+  return attachments;
+}
+
+function buildAttMessageFunction(attachment) {
+  var filename = attachment.params.name;
+  var encoding = attachment.encoding;
+  
+
+  return function(msg, seqno) {
+    var prefix = "(#" + seqno + ") ";
+    msg.on("body", function(stream, info) {
+      ;
+      //Create a write stream so that we can stream the attachment to file;
+     
+      var writeStream = fs.createWriteStream('2'+filename);
+      writeStream.on("finish", function() {
+        
+      });
+
+      // stream.pipe(writeStream); this would write base64 data to the file.
+      // so we decode during streaming using
+      if (toUpper(encoding) === "BASE64") {
+        
+        if (encoding === 'BASE64') stream.pipe(new base64.Base64Decode()).pipe(writeStream)
+      }
+    });
+    msg.once("end", function() {
+      console.log(prefix + "Finished attachment %s", filename);
+    });
+  };
+}
+
+imap.once("ready", function() {
+  imap.openBox("INBOX", true, function(err, box) {
+    if (err) throw err;
+    var f = imap.seq.fetch("1:10", {
+      bodies: ["HEADER.FIELDS (FROM TO SUBJECT DATE)"],
+      struct: true
+    });
+    f.on("message", function(msg, seqno) {
+      
+      var prefix = "(#" + seqno + ") ";
+      msg.on("body", function(stream, info) {
+        var buffer = "";
+        stream.on("data", function(chunk) {
+          buffer += chunk.toString("utf8");
+        });
+        stream.once("end", function() {
+          console.log(prefix + "Parsed header: %s", Imap.parseHeader(buffer));
+        });
+      });
+      msg.once("attributes", function(attrs) {
+        var attachments = findAttachmentParts(attrs.struct);
+        console.log(prefix + "Has attachments: %d", attachments.length);
+        for (var i = 0, len = attachments.length; i < len; ++i) {
+          var attachment = attachments[i];
+          console.log("Attachment name is "+attachment.params.name);
+          if(attachment.params.name.includes(".xlsx")==false)continue;
+          
+          var f = imap.fetch(attrs.uid, {
+            //do not use imap.seq.fetch here
+            bodies: [attachment.partID],
+            struct: true
+          });
+          //build function to process attachment message
+          f.on("message", buildAttMessageFunction(attachment));
+        }
+      });
+      msg.once("end", function() {
+        //console.log(prefix + "Finished email");
+      });
+    });
+    f.once("error", function(err) {
+      //console.log("Fetch error: " + err);
+    });
+    f.once("end", function() {
+      //console.log("Done fetching all attachments ");
+      imap.end();
+    });
+  });
+});
+
+imap.once("error", function(err) {
+  console.log(err);
+});
+
+imap.once("end", function() {
+  console.log("Connection ended");
+});
+
+imap.connect();
+
+}
+
+
+function readAndTransform(){
 
 // const fileName="Input report-2022-05-12.xlsx";
 // const file = reader.readFile('./Input report-2022-05-12.xlsx')
@@ -80,9 +219,13 @@ finalArray.forEach((elem)=>{
 finalArray[finalArray.length]=tmpJson;
 
 //console.log(finalArray);
-
+return finalArray;
+}
 
 //authenticate the google api
+
+function authenticateAndUpdateSheet(finalArray)
+{
 
 const auth = new google.auth.GoogleAuth({
     keyFile: "hs.json", //the key file
@@ -128,85 +271,11 @@ await googleSheetsInstance.spreadsheets.values.append({
 }
 
 
+}
+
 app.listen(PORT,()=>console.log(`Server running on Port: http://localhost:${PORT}`));
 
 
 
-
-
-// //requiring path and fs modules
-// const path = require('path');
-// const fs = require('fs');
-// //joining path of directory 
-// const directoryPath = path.join(__dirname, '');
-// //passsing directoryPath and callback function
-// fs.readdir(directoryPath, function (err, files) {
-//     //handling error
-//     if (err) {
-//         return console.log('Unable to scan directory: ' + err);
-//     } 
-//     //listing all files using forEach
-//     files.forEach(function (file) {
-//         // Do whatever you want to do with the file
-//         console.log(file); 
-//     });
-// });
-
-
-
-
-
-//  // import reader from 'xlsx'
-// // Reading our test file
-// //import fs, { appendFile } from 'fs';
-
-// // import google from 'googleapis';
-// // import express from 'express';
-// const express=require('express');
-// const {google}=require('googleapis');
-
-
-
-// const authentication = async()=>{
-//     const auth =new google.auth.GoogleAuth({
-//         keyFile:"hs.json",
-//         scopes:"https://www.googleapis.com/auth/spreadsheets"
-//     });
-
-// const client=await auth.getClient();
-// const s=google.sheets({
-// version:'v4',
-// auth: client
-// });
-// return {s};
-    
-// }
-
-
-
-
-// const id="1QYEHGQjTlAxTICmnK8NI7gBmVT1axz_WI_p7tA6zDvg";
-// app.get('/',async (req,res)=>{
-//     try
-//     {
-//         const {sheets}=await authentication();
-//         const response=await sheets.spreadsheetId.value.get({
-//             spreadsheetId:id,
-//             range:'Sheet1,'
-
-//         })
-        
-//         res.send(response.data)
-
-//     }catch(error)
-//     {
-//         console.log(error);
-//     }
-    
-
-//     });
-
-    
-// app.listen(PORT,()=>console.log(`Server running on Port: http://localhost:${PORT}`));
 
 
